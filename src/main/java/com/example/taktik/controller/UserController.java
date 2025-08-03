@@ -3,7 +3,6 @@ package com.example.taktik.controller;
 import com.example.taktik.model.User;
 import com.example.taktik.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,17 +40,6 @@ public class UserController {
                   .orElse(ResponseEntity.notFound().build());
     }
 
-    // Create new user (registration)
-    @PostMapping("/register")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        try {
-            User savedUser = userService.createUser(user);
-            return ResponseEntity.ok(savedUser);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
     // Update user profile
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User userDetails) {
@@ -74,17 +62,6 @@ public class UserController {
         }
     }
 
-    // User login
-    @PostMapping("/login")
-    public ResponseEntity<User> login(@RequestBody LoginRequest loginRequest) {
-        try {
-            User user = userService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-    }
-
     // Search users by username
     @GetMapping("/search")
     public ResponseEntity<List<User>> searchUsers(@RequestParam String query) {
@@ -104,17 +81,6 @@ public class UserController {
     }
 
     // DTOs
-    public static class LoginRequest {
-        private String username;
-        private String password;
-
-        // Getters and setters
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-    }
-
     public static class UserStats {
         private long videoCount;
         private long followerCount;

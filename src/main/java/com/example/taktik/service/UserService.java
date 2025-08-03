@@ -7,6 +7,7 @@ import com.example.taktik.repository.VideoRepository;
 import com.example.taktik.repository.FollowRepository;
 import com.example.taktik.repository.LikeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +28,9 @@ public class UserService {
 
     @Autowired
     private LikeRepository likeRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // Get all users
     public List<User> getAllUsers() {
@@ -55,8 +59,8 @@ public class UserService {
             throw new RuntimeException("Username already exists");
         }
 
-        // In a real application, you would hash the password here
-        // user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // Hash the password before saving
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         return userRepository.save(user);
     }
@@ -99,15 +103,15 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    // Authenticate user (simple version - in production, use proper authentication)
+    // Authenticate user with password hashing
     public User authenticate(String username, String password) {
         Optional<User> user = userRepository.findByUsername(username);
         if (user.isEmpty()) {
             throw new RuntimeException("Invalid username or password");
         }
 
-        // In a real application, you would compare hashed passwords
-        if (!user.get().getPassword().equals(password)) {
+        // Compare the provided password with the hashed password in database
+        if (!passwordEncoder.matches(password, user.get().getPassword())) {
             throw new RuntimeException("Invalid username or password");
         }
 
