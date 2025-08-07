@@ -1,6 +1,7 @@
 package com.example.taktik.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -26,12 +27,15 @@ public class User {
 
     // relationships
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference("user-videos")
     private List<Video> videos = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference("user-likes")
     private List<Like> likes = new ArrayList<>();
 
     @PrePersist

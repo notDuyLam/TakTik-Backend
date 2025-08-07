@@ -29,7 +29,7 @@ public class LikeService {
     // Like a video
     public Like likeVideo(String userId, String videoId) {
         // Check if user already liked this video
-        if (likeRepository.existsByUserIdAndVideoId(userId, videoId)) {
+        if (likeRepository.existsByUser_IdAndVideo_Id(userId, videoId)) {
             throw new RuntimeException("User has already liked this video");
         }
 
@@ -56,26 +56,26 @@ public class LikeService {
     // Unlike a video
     @Transactional
     public void unlikeVideo(String userId, String videoId) {
-        if (!likeRepository.existsByUserIdAndVideoId(userId, videoId)) {
+        if (!likeRepository.existsByUser_IdAndVideo_Id(userId, videoId)) {
             throw new RuntimeException("User has not liked this video");
         }
 
-        likeRepository.deleteByUserIdAndVideoId(userId, videoId);
+        likeRepository.deleteByUser_IdAndVideo_Id(userId, videoId);
     }
 
     // Check if user has liked a video
     public boolean hasUserLikedVideo(String userId, String videoId) {
-        return likeRepository.existsByUserIdAndVideoId(userId, videoId);
+        return likeRepository.existsByUser_IdAndVideo_Id(userId, videoId);
     }
 
     // Get like count for a video
     public long getLikeCountByVideoId(String videoId) {
-        return likeRepository.countByVideoId(videoId);
+        return likeRepository.countByVideo_Id(videoId);
     }
 
     // Get likes by video ID
     public List<Like> getLikesByVideoId(String videoId) {
-        return likeRepository.findByVideoId(videoId);
+        return likeRepository.findByVideo_Id(videoId);
     }
 
     // Get users who liked a video
@@ -90,12 +90,12 @@ public class LikeService {
 
     // Get likes by user ID
     public List<Like> getLikesByUserId(String userId) {
-        return likeRepository.findByUserId(userId);
+        return likeRepository.findByUser_Id(userId);
     }
 
     // Get like count by user
     public long getLikeCountByUserId(String userId) {
-        return likeRepository.countByUserId(userId);
+        return likeRepository.countByUser_Id(userId);
     }
 
     // Toggle like (like if not liked, unlike if already liked)

@@ -15,8 +15,8 @@ public interface VideoRepository extends JpaRepository<Video, String> {
     // Find videos by user
     List<Video> findByUser(User user);
 
-    // Find videos by user ID
-    List<Video> findByUserId(String userId);
+    // Find videos by user ID (using the User relationship)
+    List<Video> findByUser_Id(String userId);
 
     // Find videos ordered by creation date (newest first)
     List<Video> findAllByOrderByCreatedAtDesc();

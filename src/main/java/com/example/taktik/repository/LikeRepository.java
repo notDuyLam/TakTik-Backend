@@ -17,38 +17,44 @@ public interface LikeRepository extends JpaRepository<Like, String> {
     // Find likes by video
     List<Like> findByVideo(Video video);
 
-    // Find likes by video ID
-    List<Like> findByVideoId(String videoId);
+    // Find likes by video ID using relationship navigation
+    List<Like> findByVideo_Id(String videoId);
 
     // Find likes by user
     List<Like> findByUser(User user);
 
-    // Find likes by user ID
-    List<Like> findByUserId(String userId);
+    // Find likes by user ID using relationship navigation
+    List<Like> findByUser_Id(String userId);
 
     // Check if user has liked a specific video
     Optional<Like> findByUserAndVideo(User user, Video video);
 
-    // Check if user has liked a video by IDs
-    Optional<Like> findByUserIdAndVideoId(String userId, String videoId);
+    // Check if user has liked a video by IDs using relationship navigation
+    Optional<Like> findByUser_IdAndVideo_Id(String userId, String videoId);
 
     // Count likes for a video
     long countByVideo(Video video);
 
-    // Count likes by video ID
-    long countByVideoId(String videoId);
+    // Count likes by video ID using relationship navigation
+    long countByVideo_Id(String videoId);
 
     // Count likes by user
     long countByUser(User user);
 
-    // Count likes by user ID
-    long countByUserId(String userId);
+    // Count likes by user ID using relationship navigation
+    long countByUser_Id(String userId);
 
-    // Check if user liked a video (returns boolean)
+    // Delete like by user and video
+    void deleteByUserAndVideo(User user, Video video);
+
+    // Delete like by user and video IDs using relationship navigation
+    void deleteByUser_IdAndVideo_Id(String userId, String videoId);
+
+    // Check if like exists by user and video
     boolean existsByUserAndVideo(User user, Video video);
 
-    // Check if user liked a video by IDs (returns boolean)
-    boolean existsByUserIdAndVideoId(String userId, String videoId);
+    // Check if like exists by user and video IDs using relationship navigation
+    boolean existsByUser_IdAndVideo_Id(String userId, String videoId);
 
     // Find recent likes by user
     List<Like> findByUserOrderByCreatedAtDesc(User user);
@@ -60,10 +66,4 @@ public interface LikeRepository extends JpaRepository<Like, String> {
     // Find users who liked a video
     @Query("SELECT l.user FROM Like l WHERE l.video.id = :videoId ORDER BY l.createdAt DESC")
     List<User> findUsersWhoLikedVideo(@Param("videoId") String videoId);
-
-    // Delete like by user and video
-    void deleteByUserAndVideo(User user, Video video);
-
-    // Delete like by user ID and video ID
-    void deleteByUserIdAndVideoId(String userId, String videoId);
 }

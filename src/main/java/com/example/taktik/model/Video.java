@@ -1,6 +1,8 @@
 package com.example.taktik.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -14,6 +16,12 @@ public class Video {
     private String videoUrl;
     private String description;
 
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
+
+    @Column(name = "cloudinary_public_id")
+    private String cloudinaryPublicId;
+
     @Column(name = "view_count")
     private Long viewCount = 0L;
 
@@ -23,14 +31,16 @@ public class Video {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonBackReference("user-videos")
     private User user;
 
     @OneToMany(mappedBy = "video", cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "video", cascade = CascadeType.ALL)
+    @JsonManagedReference("video-likes")
     private List<Like> likes = new ArrayList<>();
 
     @PrePersist
@@ -85,6 +95,22 @@ public class Video {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
+    }
+
+    public String getCloudinaryPublicId() {
+        return cloudinaryPublicId;
+    }
+
+    public void setCloudinaryPublicId(String cloudinaryPublicId) {
+        this.cloudinaryPublicId = cloudinaryPublicId;
     }
 
     public Long getViewCount() {

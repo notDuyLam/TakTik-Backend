@@ -46,7 +46,7 @@ public class VideoService {
 
     // Get videos by user ID
     public List<Video> getVideosByUserId(String userId) {
-        return videoRepository.findByUserId(userId);
+        return videoRepository.findByUser_Id(userId);
     }
 
     // Create new video
@@ -56,17 +56,16 @@ public class VideoService {
             video.setId(UUID.randomUUID().toString());
         }
 
-        // Validate user exists
-        if (video.getUser() == null || video.getUser().getId() == null) {
+        // Handle User relationship
+        if (video.getUser() != null && video.getUser().getId() != null) {
+            Optional<User> user = userRepository.findById(video.getUser().getId());
+            if (user.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+            video.setUser(user.get());
+        } else {
             throw new RuntimeException("User is required for video creation");
         }
-
-        Optional<User> user = userRepository.findById(video.getUser().getId());
-        if (user.isEmpty()) {
-            throw new RuntimeException("User not found");
-        }
-
-        video.setUser(user.get());
 
         // Initialize view count if not set
         if (video.getViewCount() == null) {
@@ -174,5 +173,17 @@ public class VideoService {
     // Check if video exists
     public boolean videoExists(String id) {
         return videoRepository.existsById(id);
+    }
+
+    // Update video thumbnail
+    public void updateVideoThumbnail(String videoId, String thumbnailUrl) {
+        Optional<Video> optionalVideo = videoRepository.findById(videoId);
+        if (optionalVideo.isEmpty()) {
+            throw new RuntimeException("Video not found");
+        }
+
+        Video video = optionalVideo.get();
+        video.setThumbnailUrl(thumbnailUrl);
+        videoRepository.save(video);
     }
 }

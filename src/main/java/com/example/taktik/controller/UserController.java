@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class UserController {
 
     @Autowired
@@ -32,12 +32,24 @@ public class UserController {
                   .orElse(ResponseEntity.notFound().build());
     }
 
+    // Test endpoint - no database required
+    @GetMapping("/test")
+    public ResponseEntity<String> testEndpoint() {
+        return ResponseEntity.ok("UserController is working! Security permitAll() is functioning.");
+    }
+
     // Get user by username
     @GetMapping("/username/{username}")
     public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
-        Optional<User> user = userService.getUserByUsername(username);
-        return user.map(ResponseEntity::ok)
-                  .orElse(ResponseEntity.notFound().build());
+        try {
+            Optional<User> user = userService.getUserByUsername(username);
+            return user.map(ResponseEntity::ok)
+                      .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            // Add error logging to see what's happening
+            System.out.println("Error finding user by username '" + username + "': " + e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
     }
 
     // Update user profile

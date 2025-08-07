@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class AuthController {
 
     @Autowired
@@ -91,6 +91,10 @@ public class AuthController {
                 return ResponseEntity.badRequest()
                     .body(new AuthResponse(null, null, null, "Password is required"));
             }
+
+            // Log the login username and password for debugging
+            System.out.println("Login attempt for username: " + loginRequest.getUsername());
+            System.out.println("Password: " + loginRequest.getPassword());
 
             // Authenticate user
             User user = userService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
