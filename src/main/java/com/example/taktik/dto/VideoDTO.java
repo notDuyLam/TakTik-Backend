@@ -1,67 +1,23 @@
-package com.example.taktik.model;
+package com.example.taktik.dto;
 
-import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
 
-@Entity
-public class Video {
-
-    @Id
+public class VideoDTO {
     private String id;
-
     private String title;
     private String videoUrl;
     private String description;
-
-    @Column(name = "thumbnail_url")
     private String thumbnailUrl;
-
-    @Column(name = "cloudinary_public_id")
     private String cloudinaryPublicId;
-
-    @Column(name = "view_count")
-    private Long viewCount = 0L;
-
-    @Column(name = "created_at")
+    private Long viewCount;
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    @JsonIgnore
-    private User user;
-
-    @OneToMany(mappedBy = "video", cascade = CascadeType.ALL)
-    private List<Comment> comments = new ArrayList<>();
-
-    @OneToMany(mappedBy = "video", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Like> likes = new ArrayList<>();
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    private List<CommentDTO> comments;
+    private List<LikeDTO> likes;
 
     // Constructors
-    public Video() {}
-
-    public Video(String id, String title, String videoUrl, User user) {
-        this.id = id;
-        this.title = title;
-        this.videoUrl = videoUrl;
-        this.user = user;
-    }
+    public VideoDTO() {}
 
     // Getters and Setters
     public String getId() {
@@ -136,27 +92,19 @@ public class Video {
         this.updatedAt = updatedAt;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public List<Comment> getComments() {
+    public List<CommentDTO> getComments() {
         return comments;
     }
 
-    public void setComments(List<Comment> comments) {
+    public void setComments(List<CommentDTO> comments) {
         this.comments = comments;
     }
 
-    public List<Like> getLikes() {
+    public List<LikeDTO> getLikes() {
         return likes;
     }
 
-    public void setLikes(List<Like> likes) {
+    public void setLikes(List<LikeDTO> likes) {
         this.likes = likes;
     }
 }

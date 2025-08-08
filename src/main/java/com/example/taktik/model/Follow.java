@@ -1,6 +1,7 @@
 package com.example.taktik.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,10 +16,12 @@ public class Follow {
 
     @ManyToOne
     @JoinColumn(name = "follower_id")
+    @JsonIgnore
     private User follower;
 
     @ManyToOne
     @JoinColumn(name = "following_id")
+    @JsonIgnore
     private User following;
 
     @PrePersist

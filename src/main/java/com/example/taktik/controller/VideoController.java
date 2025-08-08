@@ -1,10 +1,12 @@
 package com.example.taktik.controller;
 
+import com.example.taktik.dto.VideoDTO;
 import com.example.taktik.model.Video;
 import com.example.taktik.model.User;
 import com.example.taktik.service.VideoService;
 import com.example.taktik.service.CloudinaryService;
 import com.example.taktik.service.UserService;
+import com.example.taktik.service.DTOMapperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/videos")
@@ -28,34 +31,47 @@ public class VideoController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private DTOMapperService dtoMapperService;
+
     // Get all videos (for feed)
     @GetMapping
-    public ResponseEntity<List<Video>> getAllVideos() {
+    public ResponseEntity<List<VideoDTO>> getAllVideos() {
         List<Video> videos = videoService.getAllVideos();
-        return ResponseEntity.ok(videos);
+        List<VideoDTO> videoDTOs = videos.stream()
+                .map(dtoMapperService::convertToVideoDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(videoDTOs);
     }
 
     // Get video by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Video> getVideoById(@PathVariable String id) {
+    public ResponseEntity<VideoDTO> getVideoById(@PathVariable String id) {
         Optional<Video> video = videoService.getVideoById(id);
-        return video.map(ResponseEntity::ok)
-                   .orElse(ResponseEntity.notFound().build());
+        if (video.isPresent()) {
+            VideoDTO videoDTO = dtoMapperService.convertToVideoDTO(video.get());
+            return ResponseEntity.ok(videoDTO);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     // Get videos by user ID
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Video>> getVideosByUser(@PathVariable String userId) {
+    public ResponseEntity<List<VideoDTO>> getVideosByUser(@PathVariable String userId) {
         List<Video> videos = videoService.getVideosByUserId(userId);
-        return ResponseEntity.ok(videos);
+        List<VideoDTO> videoDTOs = videos.stream()
+                .map(dtoMapperService::convertToVideoDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(videoDTOs);
     }
 
     // Create new video
     @PostMapping
-    public ResponseEntity<Video> createVideo(@RequestBody Video video) {
+    public ResponseEntity<VideoDTO> createVideo(@RequestBody Video video) {
         try {
             Video savedVideo = videoService.createVideo(video);
-            return ResponseEntity.ok(savedVideo);
+            VideoDTO videoDTO = dtoMapperService.convertToVideoDTO(savedVideo);
+            return ResponseEntity.ok(videoDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -63,10 +79,11 @@ public class VideoController {
 
     // Update video
     @PutMapping("/{id}")
-    public ResponseEntity<Video> updateVideo(@PathVariable String id, @RequestBody Video videoDetails) {
+    public ResponseEntity<VideoDTO> updateVideo(@PathVariable String id, @RequestBody Video videoDetails) {
         try {
             Video updatedVideo = videoService.updateVideo(id, videoDetails);
-            return ResponseEntity.ok(updatedVideo);
+            VideoDTO videoDTO = dtoMapperService.convertToVideoDTO(updatedVideo);
+            return ResponseEntity.ok(videoDTO);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
@@ -85,23 +102,32 @@ public class VideoController {
 
     // Get feed for user (videos from followed users)
     @GetMapping("/feed/{userId}")
-    public ResponseEntity<List<Video>> getFeedForUser(@PathVariable String userId) {
+    public ResponseEntity<List<VideoDTO>> getFeedForUser(@PathVariable String userId) {
         List<Video> feedVideos = videoService.getFeedForUser(userId);
-        return ResponseEntity.ok(feedVideos);
+        List<VideoDTO> videoDTOs = feedVideos.stream()
+                .map(dtoMapperService::convertToVideoDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(videoDTOs);
     }
 
     // Get trending videos
     @GetMapping("/trending")
-    public ResponseEntity<List<Video>> getTrendingVideos() {
+    public ResponseEntity<List<VideoDTO>> getTrendingVideos() {
         List<Video> trendingVideos = videoService.getTrendingVideos();
-        return ResponseEntity.ok(trendingVideos);
+        List<VideoDTO> videoDTOs = trendingVideos.stream()
+                .map(dtoMapperService::convertToVideoDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(videoDTOs);
     }
 
     // Search videos
     @GetMapping("/search")
-    public ResponseEntity<List<Video>> searchVideos(@RequestParam String query) {
+    public ResponseEntity<List<VideoDTO>> searchVideos(@RequestParam String query) {
         List<Video> videos = videoService.searchVideos(query);
-        return ResponseEntity.ok(videos);
+        List<VideoDTO> videoDTOs = videos.stream()
+                .map(dtoMapperService::convertToVideoDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(videoDTOs);
     }
 
     // Increment view count
@@ -128,9 +154,12 @@ public class VideoController {
 
     // Get videos with minimum view count
     @GetMapping("/popular")
-    public ResponseEntity<List<Video>> getPopularVideos(@RequestParam(defaultValue = "1000") Long minViews) {
+    public ResponseEntity<List<VideoDTO>> getPopularVideos(@RequestParam(defaultValue = "1000") Long minViews) {
         List<Video> popularVideos = videoService.getVideosWithMinViews(minViews);
-        return ResponseEntity.ok(popularVideos);
+        List<VideoDTO> videoDTOs = popularVideos.stream()
+                .map(dtoMapperService::convertToVideoDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(videoDTOs);
     }
 
     // Upload video to Cloudinary
@@ -143,39 +172,56 @@ public class VideoController {
             @RequestParam("userId") String userId) {
         
         try {
+            // Add logging for debugging
+            System.out.println("=== VIDEO UPLOAD DEBUG ===");
+            System.out.println("Title: " + title);
+            System.out.println("Description: " + description);
+            System.out.println("User ID: " + userId);
+            System.out.println("Video file size: " + videoFile.getSize());
+            System.out.println("Video file type: " + videoFile.getContentType());
+
+            // Check if user exists first
+            Optional<User> userOptional = userService.getUserById(userId);
+            if (userOptional.isEmpty()) {
+                System.out.println("ERROR: User not found with ID: " + userId);
+                throw new RuntimeException("User not found with ID: " + userId);
+            }
+            System.out.println("User found: " + userOptional.get().getUsername());
+
             // Upload video to Cloudinary
+            System.out.println("Starting video upload to Cloudinary...");
             Map<String, Object> videoUploadResult = cloudinaryService.uploadVideo(videoFile);
-            
+            System.out.println("Video upload completed");
+
             String videoUrl = (String) videoUploadResult.get("secure_url");
             String videoPublicId = (String) videoUploadResult.get("public_id");
             String thumbnailUrl;
 
             // Upload thumbnail if provided, otherwise generate from video
             if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+                System.out.println("Uploading custom thumbnail...");
                 Map<String, Object> thumbnailUploadResult = cloudinaryService.uploadImage(thumbnailFile);
                 thumbnailUrl = (String) thumbnailUploadResult.get("secure_url");
             } else {
-                // Generate thumbnail from video
+                System.out.println("Generating thumbnail from video...");
                 thumbnailUrl = cloudinaryService.generateVideoThumbnail(videoPublicId);
             }
+            System.out.println("Thumbnail ready: " + thumbnailUrl);
 
             // Create video object and save to database
+            System.out.println("Saving video to database...");
             Video video = new Video();
             video.setTitle(title);
             video.setDescription(description);
             video.setVideoUrl(videoUrl);
             video.setThumbnailUrl(thumbnailUrl);
-            // Set the user object instead of userId
-            Optional<User> userOptional = userService.getUserById(userId);
-            if (userOptional.isEmpty()) {
-                throw new RuntimeException("User not found with ID: " + userId);
-            }
             User user = userOptional.get();
             video.setUser(user);
             video.setCloudinaryPublicId(videoPublicId);
 
             Video savedVideo = videoService.createVideo(video);
-            
+            System.out.println("Video saved successfully with ID: " + savedVideo.getId());
+
             return ResponseEntity.ok(new VideoUploadResponse(
                 savedVideo.getId(),
                 videoUrl,
@@ -184,6 +230,8 @@ public class VideoController {
             ));
             
         } catch (Exception e) {
+            System.out.println("ERROR in video upload: " + e.getMessage());
+            e.printStackTrace(); // This will show the full stack trace
             return ResponseEntity.badRequest().body(
                 new ErrorResponse("Failed to upload video: " + e.getMessage())
             );

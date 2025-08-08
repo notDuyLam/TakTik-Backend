@@ -1,13 +1,16 @@
 package com.example.taktik.controller;
 
+import com.example.taktik.dto.CommentDTO;
 import com.example.taktik.model.Comment;
 import com.example.taktik.service.CommentService;
+import com.example.taktik.service.DTOMapperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/comments")
@@ -17,38 +20,53 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
+    @Autowired
+    private DTOMapperService dtoMapperService;
+
     // Get all comments for a video
     @GetMapping("/video/{videoId}")
-    public ResponseEntity<List<Comment>> getCommentsByVideo(@PathVariable String videoId) {
+    public ResponseEntity<List<CommentDTO>> getCommentsByVideo(@PathVariable String videoId) {
         List<Comment> comments = commentService.getCommentsByVideoId(videoId);
-        return ResponseEntity.ok(comments);
+        List<CommentDTO> commentDTOs = comments.stream()
+                .map(dtoMapperService::convertToCommentDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(commentDTOs);
     }
 
     // Get top-level comments for a video (no parent comments)
     @GetMapping("/video/{videoId}/top-level")
-    public ResponseEntity<List<Comment>> getTopLevelComments(@PathVariable String videoId) {
+    public ResponseEntity<List<CommentDTO>> getTopLevelComments(@PathVariable String videoId) {
         List<Comment> comments = commentService.getTopLevelCommentsByVideoId(videoId);
-        return ResponseEntity.ok(comments);
+        List<CommentDTO> commentDTOs = comments.stream()
+                .map(dtoMapperService::convertToCommentDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(commentDTOs);
     }
 
     // Get replies to a specific comment
     @GetMapping("/{commentId}/replies")
-    public ResponseEntity<List<Comment>> getReplies(@PathVariable String commentId) {
+    public ResponseEntity<List<CommentDTO>> getReplies(@PathVariable String commentId) {
         List<Comment> replies = commentService.getRepliesByCommentId(commentId);
-        return ResponseEntity.ok(replies);
+        List<CommentDTO> commentDTOs = replies.stream()
+                .map(dtoMapperService::convertToCommentDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(commentDTOs);
     }
 
     // Get comment by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Comment> getCommentById(@PathVariable String id) {
+    public ResponseEntity<CommentDTO> getCommentById(@PathVariable String id) {
         Optional<Comment> comment = commentService.getCommentById(id);
-        return comment.map(ResponseEntity::ok)
-                     .orElse(ResponseEntity.notFound().build());
+        if (comment.isPresent()) {
+            CommentDTO commentDTO = dtoMapperService.convertToCommentDTO(comment.get());
+            return ResponseEntity.ok(commentDTO);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     // Create new comment
     @PostMapping
-    public ResponseEntity<Comment> createComment(@RequestBody CommentRequest commentRequest) {
+    public ResponseEntity<CommentDTO> createComment(@RequestBody CommentRequest commentRequest) {
         try {
             Comment savedComment = commentService.createComment(
                 commentRequest.getContent(),
@@ -56,7 +74,8 @@ public class CommentController {
                 commentRequest.getVideoId(),
                 commentRequest.getParentCommentId()
             );
-            return ResponseEntity.ok(savedComment);
+            CommentDTO commentDTO = dtoMapperService.convertToCommentDTO(savedComment);
+            return ResponseEntity.ok(commentDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -64,10 +83,11 @@ public class CommentController {
 
     // Update comment
     @PutMapping("/{id}")
-    public ResponseEntity<Comment> updateComment(@PathVariable String id, @RequestBody CommentUpdateRequest updateRequest) {
+    public ResponseEntity<CommentDTO> updateComment(@PathVariable String id, @RequestBody CommentUpdateRequest updateRequest) {
         try {
             Comment updatedComment = commentService.updateComment(id, updateRequest.getContent());
-            return ResponseEntity.ok(updatedComment);
+            CommentDTO commentDTO = dtoMapperService.convertToCommentDTO(updatedComment);
+            return ResponseEntity.ok(commentDTO);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
@@ -86,30 +106,22 @@ public class CommentController {
 
     // Get comments by user
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Comment>> getCommentsByUser(@PathVariable String userId) {
+    public ResponseEntity<List<CommentDTO>> getCommentsByUser(@PathVariable String userId) {
         List<Comment> comments = commentService.getCommentsByUserId(userId);
-        return ResponseEntity.ok(comments);
+        List<CommentDTO> commentDTOs = comments.stream()
+                .map(dtoMapperService::convertToCommentDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(commentDTOs);
     }
 
     // Search comments by content
     @GetMapping("/search")
-    public ResponseEntity<List<Comment>> searchComments(@RequestParam String query) {
+    public ResponseEntity<List<CommentDTO>> searchComments(@RequestParam String query) {
         List<Comment> comments = commentService.searchCommentsByContent(query);
-        return ResponseEntity.ok(comments);
-    }
-
-    // Get comment count for a video
-    @GetMapping("/video/{videoId}/count")
-    public ResponseEntity<Long> getCommentCount(@PathVariable String videoId) {
-        long count = commentService.getCommentCountByVideoId(videoId);
-        return ResponseEntity.ok(count);
-    }
-
-    // Get reply count for a comment
-    @GetMapping("/{commentId}/reply-count")
-    public ResponseEntity<Long> getReplyCount(@PathVariable String commentId) {
-        long count = commentService.getReplyCountByCommentId(commentId);
-        return ResponseEntity.ok(count);
+        List<CommentDTO> commentDTOs = comments.stream()
+                .map(dtoMapperService::convertToCommentDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(commentDTOs);
     }
 
     // DTOs

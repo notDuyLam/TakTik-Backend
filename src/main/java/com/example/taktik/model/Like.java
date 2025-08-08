@@ -1,7 +1,7 @@
 package com.example.taktik.model;
 
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,12 +16,12 @@ public class Like {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    @JsonBackReference("user-likes")
+    @JsonIgnore
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "video_id")
-    @JsonBackReference("video-likes")
+    @JsonIgnore
     private Video video;
 
     @PrePersist

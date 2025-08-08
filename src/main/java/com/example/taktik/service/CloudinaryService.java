@@ -1,12 +1,14 @@
 package com.example.taktik.service;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 @Service
@@ -22,6 +24,13 @@ public class CloudinaryService {
      * @throws IOException if upload fails
      */
     public Map<String, Object> uploadVideo(MultipartFile file) throws IOException {
+        // Check file size to determine if we need async processing
+        long fileSizeInMB = file.getSize() / (1024 * 1024);
+        System.out.println("Video file size: " + fileSizeInMB + " MB");
+
+        // Use async processing for all videos to avoid Cloudinary sync limits
+        // Cloudinary has unpredictable sync limits that can vary by account/plan
+        System.out.println("Using async processing for video upload...");
         return cloudinary.uploader().upload(file.getBytes(),
             ObjectUtils.asMap(
                 "resource_type", "video",
@@ -30,7 +39,12 @@ public class CloudinaryService {
                 "unique_filename", true,
                 "overwrite", false,
                 "quality", "auto",
-                "format", "mp4"
+                "format", "mp4",
+                "eager_async", true,
+                "eager", Arrays.asList(
+                    new Transformation()
+                        .quality("auto")
+                )
             )
         );
     }

@@ -1,6 +1,7 @@
 package com.example.taktik.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -24,10 +25,12 @@ public class Comment {
 
     @ManyToOne
     @JoinColumn(name = "video_id")
+    @JsonIgnore
     private Video video;
 
     @ManyToOne
     @JoinColumn(name = "parent_comment_id")
+    @JsonIgnore
     private Comment parentComment;
 
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL)

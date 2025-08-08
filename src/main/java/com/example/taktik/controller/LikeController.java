@@ -1,14 +1,19 @@
 package com.example.taktik.controller;
 
+import com.example.taktik.dto.LikeDTO;
+import com.example.taktik.dto.UserSummaryDTO;
+import com.example.taktik.dto.VideoDTO;
 import com.example.taktik.model.Like;
-import com.example.taktik.model.Video;
 import com.example.taktik.model.User;
+import com.example.taktik.model.Video;
 import com.example.taktik.service.LikeService;
+import com.example.taktik.service.DTOMapperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/likes")
@@ -18,12 +23,16 @@ public class LikeController {
     @Autowired
     private LikeService likeService;
 
+    @Autowired
+    private DTOMapperService dtoMapperService;
+
     // Like a video
     @PostMapping
-    public ResponseEntity<Like> likeVideo(@RequestBody LikeRequest likeRequest) {
+    public ResponseEntity<LikeDTO> likeVideo(@RequestBody LikeRequest likeRequest) {
         try {
             Like like = likeService.likeVideo(likeRequest.getUserId(), likeRequest.getVideoId());
-            return ResponseEntity.ok(like);
+            LikeDTO likeDTO = dtoMapperService.convertToLikeDTO(like);
+            return ResponseEntity.ok(likeDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -56,30 +65,42 @@ public class LikeController {
 
     // Get all likes for a video
     @GetMapping("/video/{videoId}")
-    public ResponseEntity<List<Like>> getLikesByVideo(@PathVariable String videoId) {
+    public ResponseEntity<List<LikeDTO>> getLikesByVideo(@PathVariable String videoId) {
         List<Like> likes = likeService.getLikesByVideoId(videoId);
-        return ResponseEntity.ok(likes);
+        List<LikeDTO> likeDTOs = likes.stream()
+                .map(dtoMapperService::convertToLikeDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(likeDTOs);
     }
 
     // Get users who liked a video
     @GetMapping("/video/{videoId}/users")
-    public ResponseEntity<List<User>> getUsersWhoLikedVideo(@PathVariable String videoId) {
+    public ResponseEntity<List<UserSummaryDTO>> getUsersWhoLikedVideo(@PathVariable String videoId) {
         List<User> users = likeService.getUsersWhoLikedVideo(videoId);
-        return ResponseEntity.ok(users);
+        List<UserSummaryDTO> userDTOs = users.stream()
+                .map(dtoMapperService::convertToUserSummaryDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(userDTOs);
     }
 
     // Get videos liked by a user
     @GetMapping("/user/{userId}/videos")
-    public ResponseEntity<List<Video>> getVideosLikedByUser(@PathVariable String userId) {
+    public ResponseEntity<List<VideoDTO>> getVideosLikedByUser(@PathVariable String userId) {
         List<Video> videos = likeService.getVideosLikedByUser(userId);
-        return ResponseEntity.ok(videos);
+        List<VideoDTO> videoDTOs = videos.stream()
+                .map(dtoMapperService::convertToVideoDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(videoDTOs);
     }
 
     // Get all likes by a user
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Like>> getLikesByUser(@PathVariable String userId) {
+    public ResponseEntity<List<LikeDTO>> getLikesByUser(@PathVariable String userId) {
         List<Like> likes = likeService.getLikesByUserId(userId);
-        return ResponseEntity.ok(likes);
+        List<LikeDTO> likeDTOs = likes.stream()
+                .map(dtoMapperService::convertToLikeDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(likeDTOs);
     }
 
     // Get like count by user

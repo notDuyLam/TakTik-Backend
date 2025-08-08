@@ -1,13 +1,17 @@
 package com.example.taktik.controller;
 
+import com.example.taktik.dto.UserDTO;
+import com.example.taktik.dto.UserSummaryDTO;
 import com.example.taktik.model.User;
 import com.example.taktik.service.UserService;
+import com.example.taktik.service.DTOMapperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -17,19 +21,28 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private DTOMapperService dtoMapperService;
+
     // Get all users
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserSummaryDTO>> getAllUsers() {
         List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+        List<UserSummaryDTO> userDTOs = users.stream()
+                .map(dtoMapperService::convertToUserSummaryDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(userDTOs);
     }
 
     // Get user by ID
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable String id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable String id) {
         Optional<User> user = userService.getUserById(id);
-        return user.map(ResponseEntity::ok)
-                  .orElse(ResponseEntity.notFound().build());
+        if (user.isPresent()) {
+            UserDTO userDTO = dtoMapperService.convertToUserDTO(user.get());
+            return ResponseEntity.ok(userDTO);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     // Test endpoint - no database required
@@ -40,11 +53,14 @@ public class UserController {
 
     // Get user by username
     @GetMapping("/username/{username}")
-    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+    public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
         try {
             Optional<User> user = userService.getUserByUsername(username);
-            return user.map(ResponseEntity::ok)
-                      .orElse(ResponseEntity.notFound().build());
+            if (user.isPresent()) {
+                UserDTO userDTO = dtoMapperService.convertToUserDTO(user.get());
+                return ResponseEntity.ok(userDTO);
+            }
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             // Add error logging to see what's happening
             System.out.println("Error finding user by username '" + username + "': " + e.getMessage());
@@ -54,10 +70,11 @@ public class UserController {
 
     // Update user profile
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User userDetails) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable String id, @RequestBody User userDetails) {
         try {
             User updatedUser = userService.updateUser(id, userDetails);
-            return ResponseEntity.ok(updatedUser);
+            UserDTO userDTO = dtoMapperService.convertToUserDTO(updatedUser);
+            return ResponseEntity.ok(userDTO);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
@@ -76,9 +93,12 @@ public class UserController {
 
     // Search users by username
     @GetMapping("/search")
-    public ResponseEntity<List<User>> searchUsers(@RequestParam String query) {
+    public ResponseEntity<List<UserSummaryDTO>> searchUsers(@RequestParam String query) {
         List<User> users = userService.searchUsersByUsername(query);
-        return ResponseEntity.ok(users);
+        List<UserSummaryDTO> userDTOs = users.stream()
+                .map(dtoMapperService::convertToUserSummaryDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(userDTOs);
     }
 
     // Get user statistics
